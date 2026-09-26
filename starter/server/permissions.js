@@ -134,7 +134,7 @@ export function resolve(db, { userId, orgId, deviceId = null, now = new Date() }
   }
 
   return { role: membership.role, permissions };
-  throw todo('resolve');
+  // throw todo('resolve');
 }
 
 
@@ -167,7 +167,7 @@ export function resolveDevices(db, { userId, orgId, deviceIds, now = new Date() 
   }
   return { role: membership.role, byDevice };
   
-  throw todo('resolveDevices');
+  // throw todo('resolveDevices');
 }
 
 export function can(db, ctx, permission, deviceId=null) {
@@ -177,7 +177,7 @@ export function can(db, ctx, permission, deviceId=null) {
   const grants = fetchGrants(db, { userId: ctx.userId, orgId: ctx.orgId, now: ctx.now ?? new Date() });
   const result = resolveOne({ permission, deviceId, grants, roleBaseline, role: membership.role });
   return result.effect === 'allow';
-  throw todo('can');
+  // throw todo('can');
 }
 
 // Throws 403 carrying the reason code, so a refusal is debuggable.
@@ -194,7 +194,7 @@ export function assertCan(db, ctx, permission, deviceId=null) {
     const reason = result.reason === 'explicit_deny' ? 'explicit_deny' : 'missing_permission';
     throw forbidden(`missing permission: ${permission}`, reason);
   }
-  throw todo('assertCan');
+  // throw todo('assertCan');
 }
 
 // No privilege laundering: you may only grant authority you hold at that scope.
@@ -220,7 +220,7 @@ export function assertMayGrant(db, ctx, patterns, deviceId = null) {
       }
     }
   }
-  throw todo('assertMayGrant');
+  // throw todo('assertMayGrant');
 }
 
 // The compound check: session:start AND the permission for the requested mode, and a

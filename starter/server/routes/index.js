@@ -17,10 +17,14 @@
 // }
 import { registerAuthRoutes, registerAuthRoutesExtra } from './auth.js';
 import { registerOrgRoutes } from './orgs.js';
+import { registerMemberRoutes } from './members.js';
+import { registerInviteRoutes } from './invites.js';
 
 
 export function registerRoutes(router, deps) {
   registerAuthRoutes(router, deps);
   registerAuthRoutesExtra(router, deps);
   registerOrgRoutes(router, deps);
+  registerMemberRoutes(router, deps);
+registerInviteRoutes(router, deps);
 }
