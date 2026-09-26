@@ -52,6 +52,26 @@ Verified : All Pass , 43/43   (node scripts/check-jwt.js)
 _This is where most people's first model is wrong. Write down the model you started with, the
 observation that broke it, and the model you moved to. Be specific about the observation._
 
+
+Started by writing one shared resolver (`resolveOne`) that every exported function calls, 
+so deny-wins -> grant-allow -> role-baseline -> implicit-deny exists in exactly one place. 
+Ran check-permissions.js early and often rather than writing the whole file first.
+
+First real bug wasn't in the resolution logic — it was in cleanup. Removing leftover 
+`throw todo(...)` placeholder lines, I commented out the actual modeResult check in 
+assertCanStartSession instead of just the todo line below it. Both the "should succeed" 
+and "should fail on device permission" compound-session tests broke identically, which 
+was the tell: two different test cases producing the same wrong output almost always 
+means the code took the same wrong path for both, not two separate logic bugs.
+
+Also had to fix reason-string specificity: I was returning 'implicit' everywhere there 
+was no membership, but the tests wanted 'not_a_member' for no membership, 'suspended' 
+for a suspended one, and 'missing_device_permission' vs 'missing_permission' depending 
+on which half of the compound session check failed. Added a membershipDenyReason() 
+helper so that logic lives in one place too.
+
+Verified: `node scripts/check-permissions.js` — ALL PASS, 35/35.
+
 ## Phase 3 — orgs, members, invites
 
 _Anything you had to work out that no document states. Invite lifecycle states are a common
