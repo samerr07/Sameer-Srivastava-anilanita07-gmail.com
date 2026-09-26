@@ -16,6 +16,21 @@
 // authenticate(db, secret) returns (req, params) => caller, where caller carries at
 // least { userId, orgId, role, membership, claims }.
 
+import { verifyAccessToken, assertFresh } from './auth.js';
+import { unauthenticated, notFound } from './http.js';
+
+function extractBearerToken(req) {
+  const header = req.headers['authorization'];
+  if (!header || !header.startsWith('Bearer ')) {
+    throw unauthenticated('missing bearer token');
+  }
+  return header.slice('Bearer '.length).trim();
+}
+
+function getMembership(db, userId, orgId) {
+  return db.prepare('SELECT * FROM memberships WHERE user_id = ? AND org_id = ?').get(userId, orgId);
+}
+
 const todo = () =>
   Object.assign(
     new Error('TODO: server/context.js — authenticate() is yours to write (BRIEF.md §3).'),
@@ -24,6 +39,23 @@ const todo = () =>
 
 export function authenticate(db, secret) {
   return function buildContext(req, params) {
-    throw todo();
+    const token = extractBearerToken(req);
+    const claims = verifyAccessToken(token, secret);
+
+    const membership = getMembership(db, claims.sub, claims.org);
+
+    if (!membership || (params?.org && params.org !== claims.org)) {
+      throw notFound('not found');
+    }
+
+    assertFresh(claims, membership);
+
+    return {
+      userId: claims.sub,
+      orgId: claims.org,
+      role: membership.role,
+      membership,
+      claims,
+    };
   };
 }
