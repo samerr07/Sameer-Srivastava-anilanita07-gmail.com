@@ -153,6 +153,25 @@ Verified via curl, in order:
 - sam immediately repeats the same request -> 409 DEVICE_BUSY, naming the exact session 
   holding the device -- exclusivity enforced by the database, not application logic
 
+
+  Added PATCH/DELETE /v1/orgs/:org, GET /v1/orgs/:org/users/:userId/effective, and 
+GET /v1/orgs/:org/audit with limit/offset validation (400 outside 1-200 / >=0).
+
+effective allows self-access even without user:read (checking your own permissions is 
+always allowed); otherwise requires user:read on the caller, checked manually via a 
+direct resolve() call rather than assertCan(), since assertCan operates on ctx's own 
+org/user pair and this route asks about an arbitrary target user.
+
+Verified via curl: Sam (operator, lacks user:read/audit:read) correctly gets 403 asking 
+about Dana's effective permissions and the audit log. Dana (owner) gets both successfully. 
+Audit log shows real actions from testing plus the seed fixture's own history, including a 
+denied attempt with reason_code=missing_permission -- confirms denials are logged, not just 
+successes (invariant 9).
+
+Noticed seed/orgs.json has one audit event with at="-2h30m", which doesn't match 
+load-db.js's resolveTime() regex (single-unit only) and is stored as a literal string 
+rather than resolved to an ISO timestamp. Left as-is -- not asked to touch seed data.
+
 ## Phase 6 — audit
 
 _What did you decide counts as an auditable event, and what pushed you to that line?_

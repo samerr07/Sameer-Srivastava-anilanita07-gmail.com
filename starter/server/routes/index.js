@@ -16,21 +16,27 @@
 //   void db; void secret;
 // }
 import { registerAuthRoutes, registerAuthRoutesExtra } from './auth.js';
-import { registerOrgRoutes } from './orgs.js';
+import { registerOrgRoutes, registerOrgRoutesExtra } from './orgs.js';
 import { registerMemberRoutes } from './members.js';
 import { registerInviteRoutes } from './invites.js';
 import { registerDeviceRoutes } from './devices.js';
 import { registerGrantRoutes } from './grants.js'
 import { registerSessionRoutes } from './sessions.js';
+import { registerEffectiveRoutes } from './effective.js';
+import { registerAuditRoutes } from './audit-log.js';
 
 
 export function registerRoutes(router, deps) {
   registerAuthRoutes(router, deps);
   registerAuthRoutesExtra(router, deps);
   registerOrgRoutes(router, deps);
+   registerOrgRoutesExtra(router, deps);
   registerMemberRoutes(router, deps);
 registerInviteRoutes(router, deps);
 registerDeviceRoutes(router, deps);
 registerGrantRoutes(router, deps);
 registerSessionRoutes(router, deps);
+// registerSessionRoutes(router, deps);
+  registerEffectiveRoutes(router, deps);
+  registerAuditRoutes(router, deps);
 }
