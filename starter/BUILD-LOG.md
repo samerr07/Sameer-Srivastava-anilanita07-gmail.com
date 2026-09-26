@@ -24,15 +24,28 @@ Note: this is the failure mode where a passing test is worse than a failing one.
 
 -->
 
-## Phase 0 — orientation
+## Phase 0 — orientation - 2026-09-26
 
 _Installed, reset the database, read the documents, ran the suites against the untouched skeleton.
-What did the starting line actually look like, and which failure surprised you?_
+
+Installed on Windows , ran npm run db:reset  failed bcz the script uses
+'rm -f' , a Unix cmnd Powershell does not have. Switch to git bash(also considred rewriting the script, decided not to touch it since i was not told to). Then read Brief.md, AuthData-Model.md, Permissions.md befire writing any code.
+
+
+
 
 ## Phase 1 — token verification
 
 _What did you expect each failure mode to look like before you ran it? Which one behaved
 differently from your expectation, and what did that tell you?_
+
+Read all 7 failures mode in Auth-Data-Model.md  before writing anything, then went through the TODO commnet in order, writiing the check and testing against check-jwt,s's error as i went. Most were Direct: malformedsegments, bad JSON, wrong iss.aud missing jti.
+
+
+The moost tricky one was the 5th one , i had to read the docs again and again to understand the error message and the code i wrote for that case. The one i had tothink hardest about was algorithm confusion ($10,"alg:none" and substitution attacks)- the fix is to never let the token;'s own header decide how you verify it. you always verify with HS256
+using your own secret , and seperately check that header claims, rejecting if not. Trusting the header to select  the algorithm is the actual vulnerablity.
+
+Verified : All Pass , 43/43   (node scripts/check-jwt.js)
 
 ## Phase 2 — caller context and the resolution engine
 

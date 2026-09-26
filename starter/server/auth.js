@@ -73,6 +73,54 @@ export function issueAccessToken({ userId, orgId, role, permVersion }, secret) {
 export function verifyAccessToken(token, secret) {
   // YOURS TO WRITE. Every failure mode listed above must be a 401 UNAUTHENTICATED.
   // `node scripts/check-jwt.js` is the public suite for this function.
+
+  // Rule 1: must be exactly three dot-separated segments
+  const parts = String(token ?? '').split('.');
+  if (parts.length !== 3) throw unauthenticated('token must have three dot-separated segments');
+
+  const [h,p,s] = parts;
+
+  // Rule 2: header and payload must be valid base64url-encoded JSON
+  let header, payload;
+  try{
+    header = JSON.parse(unb64(h).toString('utf8'));
+    payload = JSON.parse(unb64(p).toString('utf8'));
+  } catch (err) {
+    throw unauthenticated('header or payload is not valid base64url-encoded JSON');
+  }
+
+  // Rule 3 : never trust the header's alg - check it, don't switch on it. Also check typ.
+
+  if(header.alg !== ALG || header.typ !== 'JWT') {
+    throw unauthenticated('invalid header: alg must be HS256 and typ must be JWT');
+  }
+
+  // Rule 4 : recompute the signature and compare in constant time
+  const expectedSig = createHmac('sha256', secret).update(`${h}.${p}`).digest();
+  const actualSig = unb64(s);
+  if(actualSig.length !== expectedSig.length || !timingSafeEqual(actualSig, expectedSig)) {
+    throw unauthenticated('invalid signature');
+  }
+
+
+  // Rule 5 : exp must exist, be numeric, and be stricly in the future
+
+  const now = Math.floor(Date.now() / 1000);
+  if(typeof payload.exp !== 'number' || payload.exp <= now) {
+    throw unauthenticated('token has expired or exp is invalid');
+  }
+
+  // Rule 6 : iss/ aud must match our constants
+  if(payload.iss !== ISS || payload.aud !== AUD) {
+    throw unauthenticated('invalid issuer or audience');
+  }
+
+  // Rule 7 : jti must exist and be non-empty
+  if(!payload.jti || typeof payload.jti !== 'string') {
+    throw unauthenticated('jti must exist and be non-empty');
+  }
+
+  return payload;
   throw Object.assign(
     new Error('TODO: server/auth.js — verifyAccessToken() is yours to write (AUTH-DATA-MODEL.md §10).'),
     { code: 'NOT_IMPLEMENTED' }
