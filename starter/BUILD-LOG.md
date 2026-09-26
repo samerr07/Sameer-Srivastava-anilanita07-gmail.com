@@ -116,6 +116,19 @@ failure reasons distinguishable?_
 ## Phase 6 — audit
 
 _What did you decide counts as an auditable event, and what pushed you to that line?_
+Implemented lifecycle.js (roleRanks, assertCanModify, assertNotLastOwner, endActiveSessions, 
+snapshotAuthority, sessionExpiry) and audit.js (audit, auditDenials). Kept roles.rank strictly 
+to modification authority — assertCanModify never touches permissions.js, and permissions.js 
+never touches rank. Split D8 across two places on purpose: assertCanModify only compares rank 
+(equal-or-higher target -> 403); "no self-role-change" and "only an owner may confer owner" 
+aren't rank questions at all, so those get checked directly in route handlers instead.
+
+audit.js only ever INSERTs, matching the append-only triggers on audit_events. auditDenials() 
+wraps a permission-gated action so a 403 gets logged with its reason code before rethrowing, 
+without also logging the success case twice.
+
+Server boots clean with both modules wired in — no dedicated check script for these two 
+(unlike auth.js/permissions.js), so verified via `node server/index.js` starting without error.
 
 ## Phase 7 — the console
 
