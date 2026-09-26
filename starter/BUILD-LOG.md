@@ -72,7 +72,7 @@ helper so that logic lives in one place too.
 
 Verified: `node scripts/check-permissions.js` — ALL PASS, 35/35.
 
-## Phase 3 — orgs, members, invites
+## Phase 3 — orgs, members, invites (auth/me, auth/token, orgs)
 
 _Anything you had to work out that no document states. Invite lifecycle states are a common
 source of this._
@@ -90,6 +90,18 @@ was the dev-watcher timing, not the route code.
 Verified: `curl -X POST /v1/auth/login` with dana@example.test returns a valid token, 
 role=owner, and both her org memberships (Acme as owner, Globex as viewer) — matching the 
 seed fixture.
+
+
+
+
+Built POST /v1/auth/refresh, POST /v1/auth/token, GET /v1/auth/me, GET+POST /v1/orgs. 
+refresh_tokens has no org column, so a refreshed access token defaults to the user's 
+highest-rank active membership rather than preserving the pre-refresh org — logged as 
+a decision since the docs don't specify this.
+
+Verified via curl: dana@example.test logs in as owner in Acme, GET /auth/me returns her 
+full resolved permission set including device:reboot (the personalized hidden permission) 
+correctly denied/implicit — confirms the resolver has no hardcoded permission list.
 
 ## Phase 4 — devices and grants
 

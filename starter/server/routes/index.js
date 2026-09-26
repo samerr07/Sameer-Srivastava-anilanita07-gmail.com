@@ -15,8 +15,12 @@
 //   const { db, secret } = deps;
 //   void db; void secret;
 // }
-import { registerAuthRoutes } from './auth.js';
+import { registerAuthRoutes, registerAuthRoutesExtra } from './auth.js';
+import { registerOrgRoutes } from './orgs.js';
+
 
 export function registerRoutes(router, deps) {
   registerAuthRoutes(router, deps);
+  registerAuthRoutesExtra(router, deps);
+  registerOrgRoutes(router, deps);
 }
