@@ -134,6 +134,25 @@ resolution has no hardcoded permission list, matching the earlier org-level chec
 _Two permissions, one device. What did you have to resolve, and in what order, to keep the two
 failure reasons distinguishable?_
 
+
+Built sessions.js: start (compound check + D10), list, view-one, terminate. Let the database's 
+partial unique index (one_exclusive_session_per_device) be the actual race-safety mechanism for 
+D10, rather than an app-level check-then-insert -- the route just attempts the insert and catches 
+the UNIQUE constraint violation, converting it to a clean 409 DEVICE_BUSY naming the holding 
+session's id. This matches the schema's own warning against check-then-act races.
+
+GET/DELETE /v1/sessions/:id take no :org in the path (per BRIEF.md's endpoint table) -- org is 
+derived from the session row itself, and cross-org access is still blocked by comparing 
+session.org_id against ctx.orgId, same structural-isolation pattern as everywhere else.
+
+Verified via curl, in order:
+- viewer starts a 'view' session on lab-mac-01 (device-scoped grant) -> 201
+- same viewer tries 'control' on the same device -> 403, reason=missing_device_permission 
+  (distinct from missing_permission, confirming the compound check's two failure paths)
+- sam (operator) starts 'control' on lab-win-01 -> 201
+- sam immediately repeats the same request -> 409 DEVICE_BUSY, naming the exact session 
+  holding the device -- exclusivity enforced by the database, not application logic
+
 ## Phase 6 — audit
 
 _What did you decide counts as an auditable event, and what pushed you to that line?_

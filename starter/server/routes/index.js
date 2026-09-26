@@ -21,6 +21,7 @@ import { registerMemberRoutes } from './members.js';
 import { registerInviteRoutes } from './invites.js';
 import { registerDeviceRoutes } from './devices.js';
 import { registerGrantRoutes } from './grants.js'
+import { registerSessionRoutes } from './sessions.js';
 
 
 export function registerRoutes(router, deps) {
@@ -31,4 +32,5 @@ export function registerRoutes(router, deps) {
 registerInviteRoutes(router, deps);
 registerDeviceRoutes(router, deps);
 registerGrantRoutes(router, deps);
+registerSessionRoutes(router, deps);
 }
