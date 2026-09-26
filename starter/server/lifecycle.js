@@ -40,6 +40,7 @@ export function assertCanModify(db, callerRole, targetRole) {
   if (callerRank === undefined || targetRank === undefined) {
     throw forbidden('unknown role', 'invalid_role');
   }
+  if (callerRole === 'owner' && targetRole === 'owner') return;
   if (callerRank <= targetRank) {
     throw forbidden('cannot modify a user of equal or higher rank', 'insufficient_rank');
   }

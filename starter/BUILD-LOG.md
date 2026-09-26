@@ -189,6 +189,26 @@ without also logging the success case twice.
 Server boots clean with both modules wired in — no dedicated check script for these two 
 (unlike auth.js/permissions.js), so verified via `node server/index.js` starting without error.
 
+## 2026-09-26 · Phase 5/6 — check-api.js: 65/66, then 66/66
+
+Ran the full check-api.js suite for the first time. 65/66 passed on the first run -- every 
+hard case (cross-org isolation, D2, D6, D8, D9, D10, D19, invite lifecycle, grandfathering, 
+suspension cascade, pagination bounds) passed immediately.
+
+One failure: "demoting a NON-last owner is allowed" got 403, wanted 200. Acme has two owners 
+(dana and usr_acme_owner); Dana demoting the other owner to viewer should succeed, but 
+assertCanModify() blocks ANY equal-rank modification, including owner-vs-owner, per 
+PERMISSIONS.md §6's table (illustrated with admin->admin).
+
+Realized the equal-rank block can't be meant to include owners: if it did, a multi-owner org 
+could never demote any owner without a third owner exjust to authorize the demotion, which 
+makes the last-owner protection meaningless in practice. Special-cased owner-modifying-owner 
+as allowed in assertCanModify, leaving the equal-rank block in place for every other pair 
+(admin-vs-admin, etc.) and relying on assertNotLastOwner (already called separately by the 
+route) to guard against removing the final owner.
+
+Verified: node scripts/check-api.js -- ALL PASS, 66/66.
+
 ## Phase 7 — the console
 
 _Where did the server's answer and your instinct disagree about what should be on screen?_
