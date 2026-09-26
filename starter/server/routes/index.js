@@ -19,6 +19,8 @@ import { registerAuthRoutes, registerAuthRoutesExtra } from './auth.js';
 import { registerOrgRoutes } from './orgs.js';
 import { registerMemberRoutes } from './members.js';
 import { registerInviteRoutes } from './invites.js';
+import { registerDeviceRoutes } from './devices.js';
+import { registerGrantRoutes } from './grants.js'
 
 
 export function registerRoutes(router, deps) {
@@ -27,4 +29,6 @@ export function registerRoutes(router, deps) {
   registerOrgRoutes(router, deps);
   registerMemberRoutes(router, deps);
 registerInviteRoutes(router, deps);
+registerDeviceRoutes(router, deps);
+registerGrantRoutes(router, deps);
 }

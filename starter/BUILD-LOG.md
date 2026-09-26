@@ -103,10 +103,31 @@ Verified via curl: dana@example.test logs in as owner in Acme, GET /auth/me retu
 full resolved permission set including device:reboot (the personalized hidden permission) 
 correctly denied/implicit — confirms the resolver has no hardcoded permission list.
 
-## Phase 4 — devices and grants
+## Phase 4 — devices and grants  (2026-09-26 )
 
 _What happens at the boundary where two grants disagree, or where a grant's scope and the
 question's scope differ? Say what you predicted and what you got._
+
+
+Built devices.js (list/view/create/update/delete/transfer) and grants.js (create/list/revoke). 
+Reused resolveDevices() for the list endpoint's per-row permission shape and resolve() for 
+single-device view -- no new resolution logic needed here, just wiring.
+
+device:view gates row inclusion, not device:list -- a device the caller can't view is filtered 
+out of the list entirely rather than shown with redacted fields. device:list only gates whether 
+the endpoint itself is reachable at all.
+
+Transfer needed device:provision in BOTH orgs -- the source org via assertCan() as normal, and 
+the destination org checked manually via a direct resolve() call, since assertCan only knows 
+about ctx.orgId (the caller's current org), not an arbitrary destination named in the body.
+
+Grants validate every permission string against permission_patterns before touching the DB, so 
+an unknown permission is a clean 400 rather than a raw foreign-key constraint error surfacing 
+to the client. assertMayGrant() (already built in Phase 2) enforces no-laundering on create.
+
+Verified: GET /orgs/org_acme/devices as owner returns all 5 devices, each with a full resolved 
+permission set including device:reboot denied/implicit on every row -- confirms per-device 
+resolution has no hardcoded permission list, matching the earlier org-level check.
 
 ## Phase 5 — sessions
 
