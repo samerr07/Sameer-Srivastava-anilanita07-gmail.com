@@ -77,6 +77,20 @@ Verified: `node scripts/check-permissions.js` — ALL PASS, 35/35.
 _Anything you had to work out that no document states. Invite lifecycle states are a common
 source of this._
 
+Discovered server/routes/index.js's registerRoutes() was completely empty (`void db; void secret;`) 
+— every /v1/* endpoint had been returning 404 by design, per the file's own comment. Built 
+server/routes/auth.js starting with POST /v1/auth/login, since nothing else can be tested 
+without it (same principle as auth.js being first overall).
+
+Hit a confusing false alarm: `npm run dev`'s file watcher was restarting the server mid-request, 
+producing "connection reset" errors that looked like a code bug. Ran `node server/index.js` 
+directly (no watcher) to isolate it — server booted clean and stayed up, confirming the issue 
+was the dev-watcher timing, not the route code.
+
+Verified: `curl -X POST /v1/auth/login` with dana@example.test returns a valid token, 
+role=owner, and both her org memberships (Acme as owner, Globex as viewer) — matching the 
+seed fixture.
+
 ## Phase 4 — devices and grants
 
 _What happens at the boundary where two grants disagree, or where a grant's scope and the
