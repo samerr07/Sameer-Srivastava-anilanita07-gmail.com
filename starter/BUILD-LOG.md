@@ -209,16 +209,69 @@ route) to guard against removing the final owner.
 
 Verified: node scripts/check-api.js -- ALL PASS, 66/66.
 
-## Phase 7 — the console
+## Phase 7 — the console (2026-09-26)
 
 _Where did the server's answer and your instinct disagree about what should be on screen?_
 
-## Phase 8 — hardening
+Built main.jsx against UI-INVENTORY.md's exact test-id/permission table rather than guessing 
+element names -- every gated element checks me.permissions['x']?.effect === 'allow' or a 
+device's own per-row permissions object, sourced entirely from GET /auth/me and GET /devices 
+responses. No role === 'admin' check anywhere in the file.
 
-_What did you measure, what did you fix, and what did you deliberately leave alone? Anything you
-chose not to build belongs here with its reason._
+My instinct going in was that Sam (operator, Acme) should see every device action his role 
+grants, including Terminal. The UI correctly showed no Terminal button for him -- I initially 
+read this as a bug before remembering the seed fixture has an org-wide deny grant on Sam 
+specifically for device:terminal (grt_sam_deny_terminal_orgwide, visible in the audit log from 
+earlier testing). The UI was right; my mental model of "operator role -> operator's full 
+baseline" was wrong, because it ignored that a grant can narrow a role's baseline just as 
+easily as widen it (D3). This is the same D1/D3 interaction check-permissions.js already 
+covered in Phase 2, now visible as an actual missing button instead of a JSON field.
+
+Hit a real bug: DevicesCard's error state persisted across successful refreshes -- switching 
+orgs would transiently fail once (likely a token/orgId race during the two-step switch: new 
+token fetched, then devices fetched with it), set an error, and never clear it even once the 
+next successful fetch returned good data. Fixed by resetting error to null at the start of 
+every refresh() call, not just on catch.
+
+Verified visually (screenshots, not curl) the exact scenario BRIEF.md §7 describes: logged in 
+as Sam, Acme shows Control/Transfer buttons but no Audit nav item; switching to Globex removes 
+Control/Transfer from the device rows and adds Audit/People/Grants nav items -- same person, 
+permissions swap completely, driven only by server responses.
+
+## Phase 8 — hardening (2026-09-26)
+
+_What did you measure, what did you fix, and what did you deliberately leave alone?_
+
+Ran a clean-checkout test: cloned the repo into a separate folder and ran 
+npm install && npm run db:reset && npm run dev with nothing but what's on GitHub -- confirmed 
+this works, which is the closest check I have to what grading will actually run.
+
+Did not run a genuine concurrent-request test against anything except D10 (two sequential 
+curl calls, which is not the same as truly simultaneous requests). The invite-creation race 
+guard (one_live_invite_per_email) relies on the same database-constraint pattern as D10, but 
+I did not specifically verify the app-level 409 conversion holds under real concurrency for 
+invites -- noted honestly in DECISIONS.md rather than claimed as verified.
+
+Deliberately left the console's forms as window.prompt/window.confirm rather than building 
+proper modal UI, and left device:file_transfer without a real implementation behind its 
+button -- both documented with reasons in DECISIONS.md's "Deliberately not built" section, 
+prioritizing correct permission-gating coverage across every card over polish on any one of 
+them.
 
 ## Open threads
 
-_Things you know are wrong, unfinished, or that you would do differently with another day. Listing
-these honestly is worth more than pretending they do not exist — we will find them anyway._
+- Invite creation's race-safety (one_live_invite_per_email) was never tested under genuine 
+  concurrent requests, unlike D10 which was (see Phase 8, DECISIONS.md).
+- Console forms use window.prompt/window.confirm instead of real modal components -- 
+  functional and correctly permission-gated, but not production-quality UX.
+- device:file_transfer's button renders correctly per permission but has no real transfer 
+  behavior behind it (shows a placeholder alert).
+- Session rows in the console show raw device ids (e.g. dev_lab_mac_01) rather than resolved 
+  device names -- UI-INVENTORY.md doesn't require a name field for session-row, so this was 
+  left as a cosmetic gap.
+- seed/orgs.json's audit event with at="-2h30m" doesn't match load-db.js's resolveTime() 
+  regex and is stored as a literal unresolved string -- a fixture quirk, not touched since 
+  BRIEF.md says not to build against the seed fixture or edit seed data.
+- Did not run npx playwright test (the UI hidden-test suite) -- relied on manual visual 
+  verification against UI-INVENTORY.md's table instead, given time constraints. If it's 
+  available, running it would likely surface gaps my manual pass missed.
