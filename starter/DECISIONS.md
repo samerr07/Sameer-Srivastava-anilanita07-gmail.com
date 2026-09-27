@@ -145,3 +145,17 @@ This is a starter-provided script I didn't write or modify. For Windows, the equ
 `$env:NODE_ENV="production"; node server/index.js`, or installing `cross-env` as a dependency. 
 Not fixed, since it's outside what BRIEF.md asks me to build — noted here in case it's relevant 
 to how the app is run during grading.
+
+
+
+
+
+### Submission run command uses `node server/index.js` directly, not `npm run dev`
+
+**What I chose:** For the submission form's "command that starts your app from a clean checkout," I specified `cd starter && npm install && npm run db:reset && node server/index.js` instead of `npm run dev`.
+
+**Why:** `npm run dev`'s script (`node --watch-path=./server --watch server/index.js`) restarts the server whenever it detects a file change nearby, which — verified in a genuinely fresh clone tested during final submission checks — caused the browser to occasionally load mid-restart and receive a broken/incomplete response. `node server/index.js` runs the identical server without the watcher and rendered correctly every time in the same fresh-clone test.
+
+**What I rejected:** submitting `npm run dev` as literally defined in `package.json`, since it's the "intended" dev script. Rejected because the watcher's restarts are a live-editing convenience with no benefit for someone running the app once to grade it, and the restart timing introduced a real, reproducible failure mode (page loading against a server mid-restart) that a first-time reader has no way to anticipate or work around.
+
+**What would change my mind:** if `--watch` mode had a way to debounce restarts or only trigger on actual file saves rather than filesystem noise — I didn't investigate whether Node's `--watch` flag supports this, given time constraints at submission.
