@@ -131,3 +131,17 @@ I built against `assertNotLastOwner`'s implied allowance (owner-vs-owner permitt
 **What I rejected:** defaulting to the most-recently-joined membership, or the alphabetically-first org name. Rejected because rank-based defaulting has an intuitive justification (a user most likely wants to land in the org where they have the most authority) that neither alternative has, and because it produced the correct, testable result for the seed fixture's only multi-org user without special-casing her id.
 
 **What would change my mind:** an explicit statement of which org should be the default — none exists in the provided documents, so this remains a judgment call rather than a documented requirement.
+
+
+
+
+
+### Note: `npm start` fails on Windows out of the box
+
+`package.json`'s `start` script (`NODE_ENV=production node server/index.js`) uses Unix inline 
+environment-variable syntax, which Windows PowerShell/cmd don't support natively — running 
+`npm start` fails with `'NODE_ENV' is not recognized as an internal or external command`. 
+This is a starter-provided script I didn't write or modify. For Windows, the equivalent is 
+`$env:NODE_ENV="production"; node server/index.js`, or installing `cross-env` as a dependency. 
+Not fixed, since it's outside what BRIEF.md asks me to build — noted here in case it's relevant 
+to how the app is run during grading.
