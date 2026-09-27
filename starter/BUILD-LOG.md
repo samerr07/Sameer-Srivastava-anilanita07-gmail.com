@@ -238,6 +238,40 @@ as Sam, Acme shows Control/Transfer buttons but no Audit nav item; switching to 
 Control/Transfer from the device rows and adds Audit/People/Grants nav items -- same person, 
 permissions swap completely, driven only by server responses.
 
+
+
+## 2026-09-27 · Phase 7/8 — npx playwright test: 0/25 -> 25/25
+
+Ran the UI hidden-test suite for the first time. All 25 initially failed with a Playwright 
+browser-binary error (`npx playwright install` fixed that), then all 25 timed out identically 
+on `login-email` -- traced to two real bugs, not test issues:
+
+1. server/index.js's DIST constant used `.pathname` on a file:// URL, the same Windows 
+   drive-letter-doubling bug fixed earlier in load-db.js, this time breaking `serveStatic` in 
+   production mode entirely (silent 404 on every request). Same fix: fileURLToPath.
+2. playwright.config.js's webServer.command never actually ran `npm run build` despite its own 
+   comment claiming it does -- had to build manually first.
+
+After both fixes: 16/25 passed immediately. Remaining 9 failures were genuine console gaps the 
+test file exposed that manual clicking-through never would have caught:
+- no `active-role`/`data-effect`/`login-form` test ids
+- background color didn't actually change on org switch (only the top border did)
+- no session restore on reload (no POST /auth/refresh call on mount)
+- grant creation used a prompt() instead of a real form with named selects/checkboxes
+- no client-side route for /invite/:token at all
+- org creation didn't auto-switch context into the new org
+
+Fixed all of these; hit one more real backend bug along the way: server/routes/auth.js's 
+/auth/refresh route called nowIso() without importing it -- a genuine crash that only surfaced 
+once reload-restore was actually exercised end-to-end (never manually curl-tested before this).
+
+Last failure: "a new org can be created" expected create-org to trigger a native window.prompt 
+dialog (`page.once('dialog', ...)`), but I'd built an inline form instead. Replaced with 
+window.prompt to match the test's actual expectation -- a case where the test file itself was 
+the authoritative spec for an interaction UI-INVENTORY.md didn't fully specify.
+
+Verified: `npx playwright test` -- 25/25 PASS.
+
 ## Phase 8 — hardening (2026-09-26)
 
 _What did you measure, what did you fix, and what did you deliberately leave alone?_

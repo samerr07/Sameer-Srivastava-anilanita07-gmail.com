@@ -96,6 +96,57 @@ const styles = {
 
 // --- login page ------------------------------------------------------------
 
+// function LoginPage({ onLogin }) {
+//   const [email, setEmail] = useState('');
+//   const [password, setPassword] = useState('');
+//   const [error, setError] = useState(null);
+//   const [busy, setBusy] = useState(false);
+
+//   async function handleSubmit(e) {
+//     e.preventDefault();
+//     setError(null);
+//     setBusy(true);
+//     try {
+//       const data = await apiFetch('/auth/login', { method: 'POST', body: { email, password } });
+//       await onLogin(data);
+//     } catch (err) {
+//       // Message passed through unchanged from the server -- never improved on,
+//       // since a more specific message here would be an account-enumeration oracle.
+//       setError({ message: err.message || 'sign-in failed', code: err.code || 'UNKNOWN' });
+//     } finally {
+//       setBusy(false);
+//     }
+//   }
+
+//   return (
+//     <main style={styles.loginPage}>
+//       <form onSubmit={handleSubmit} style={styles.loginForm}>
+//         <h1 style={{ margin: 0 }}>RemoteOps</h1>
+//         <label>
+//           Email
+//           <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required style={{ display: 'block', width: '100%', marginTop: 4 }} />
+//         </label>
+//         <label>
+//           Password
+//           <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required style={{ display: 'block', width: '100%', marginTop: 4 }} />
+//         </label>
+//         <button type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+//         {error && (
+//           <div
+//             data-testid="login-error"
+//             data-error-code={error.code}
+//             role="alert"
+//             aria-live="assertive"
+//             style={styles.loginError}
+//           >
+//             {error.message}
+//           </div>
+//         )}
+//       </form>
+//     </main>
+//   );
+// }
+
 function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -110,8 +161,6 @@ function LoginPage({ onLogin }) {
       const data = await apiFetch('/auth/login', { method: 'POST', body: { email, password } });
       await onLogin(data);
     } catch (err) {
-      // Message passed through unchanged from the server -- never improved on,
-      // since a more specific message here would be an account-enumeration oracle.
       setError({ message: err.message || 'sign-in failed', code: err.code || 'UNKNOWN' });
     } finally {
       setBusy(false);
@@ -120,25 +169,34 @@ function LoginPage({ onLogin }) {
 
   return (
     <main style={styles.loginPage}>
-      <form onSubmit={handleSubmit} style={styles.loginForm}>
+      {/* <form onSubmit={handleSubmit} style={styles.loginForm}> */}
+      <form data-testid="login-form" onSubmit={handleSubmit} style={styles.loginForm}>
         <h1 style={{ margin: 0 }}>RemoteOps</h1>
         <label>
           Email
-          <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required style={{ display: 'block', width: '100%', marginTop: 4 }} />
+          <input
+            data-testid="login-email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            type="email"
+            style={{ display: 'block', width: '100%', marginTop: 4 }}
+          />
         </label>
         <label>
           Password
-          <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required style={{ display: 'block', width: '100%', marginTop: 4 }} />
+          <input
+            data-testid="login-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="password"
+            style={{ display: 'block', width: '100%', marginTop: 4 }}
+          />
         </label>
-        <button type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+        <button data-testid="login-submit" type="submit" disabled={busy}>
+          {busy ? 'Signing in…' : 'Sign in'}
+        </button>
         {error && (
-          <div
-            data-testid="login-error"
-            data-error-code={error.code}
-            role="alert"
-            aria-live="assertive"
-            style={styles.loginError}
-          >
+          <div data-testid="login-error" data-error-code={error.code} role="alert" aria-live="assertive" style={styles.loginError}>
             {error.message}
           </div>
         )}
@@ -149,9 +207,79 @@ function LoginPage({ onLogin }) {
 
 // --- sidebar / nav / org switcher -------------------------------------------
 
+// function Sidebar({ me, onSwitchOrg, onCreateOrg, onSignOut, activeCard, onSelectCard }) {
+//   const [showCreate, setShowCreate] = useState(false);
+//   const [newOrgName, setNewOrgName] = useState('');
+//   const p = me.permissions;
+
+//   const navItems = [
+//     { key: 'devices', label: 'Devices', testId: 'nav-devices', visible: p['device:list']?.effect === 'allow' },
+//     { key: 'people', label: 'People', testId: 'nav-people', visible: p['user:read']?.effect === 'allow' },
+//     { key: 'grants', label: 'Grants', testId: 'nav-grants', visible: p['user:read']?.effect === 'allow' },
+//     { key: 'sessions', label: 'Sessions', testId: 'nav-sessions', visible: p['session:view']?.effect === 'allow' },
+//     { key: 'audit', label: 'Audit', testId: 'nav-audit', visible: p['audit:read']?.effect === 'allow' },
+//     { key: 'admin', label: 'Admin', testId: 'nav-admin', visible: p['org:update']?.effect === 'allow' || p['org:delete']?.effect === 'allow' },
+//   ];
+
+//   return (
+//     <aside style={styles.sidebar}>
+//       <div style={styles.brand}>RemoteOps</div>
+
+//       <div style={styles.orgSwitcher}>
+//         {me.orgs.map((o) => (
+//           <button
+//             key={o.id}
+//             data-testid="org-option"
+//             data-org-id={o.id}
+//             onClick={() => onSwitchOrg(o.id)}
+//             style={{ ...styles.orgButton, ...(o.id === me.orgId ? styles.orgButtonActive : {}) }}
+//           >
+//             {o.name}
+//           </button>
+//         ))}
+//         <button data-testid="create-org" onClick={() => setShowCreate((s) => !s)} style={styles.createOrgButton}>
+//           + New org
+//         </button>
+//         {showCreate && (
+//           <form
+//             style={styles.createOrgForm}
+//             onSubmit={async (e) => {
+//               e.preventDefault();
+//               if (!newOrgName.trim()) return;
+//               await onCreateOrg(newOrgName.trim());
+//               setNewOrgName('');
+//               setShowCreate(false);
+//             }}
+//           >
+//             <input value={newOrgName} onChange={(e) => setNewOrgName(e.target.value)} placeholder="Org name" autoFocus />
+//             <button type="submit">Create</button>
+//           </form>
+//         )}
+//       </div>
+
+//       <nav style={styles.nav}>
+//         {navItems.filter((n) => n.visible).map((n) => (
+//           <button
+//             key={n.key}
+//             data-testid={n.testId}
+//             onClick={() => onSelectCard(n.key)}
+//             style={{ ...styles.navButton, ...(activeCard === n.key ? styles.navButtonActive : {}) }}
+//           >
+//             {n.label}
+//           </button>
+//         ))}
+//       </nav>
+
+//       <div style={styles.footer}>
+//         {/* <div style={styles.roleTag}>{me.role}</div> */}
+//         <div data-testid="active-role" style={styles.roleTag}>{me.role}</div>
+//         <button onClick={onSignOut} style={styles.signOutButton}>Sign out</button>
+//       </div>
+//     </aside>
+//   );
+// }
+
 function Sidebar({ me, onSwitchOrg, onCreateOrg, onSignOut, activeCard, onSelectCard }) {
-  const [showCreate, setShowCreate] = useState(false);
-  const [newOrgName, setNewOrgName] = useState('');
   const p = me.permissions;
 
   const navItems = [
@@ -179,24 +307,16 @@ function Sidebar({ me, onSwitchOrg, onCreateOrg, onSignOut, activeCard, onSelect
             {o.name}
           </button>
         ))}
-        <button data-testid="create-org" onClick={() => setShowCreate((s) => !s)} style={styles.createOrgButton}>
+        <button
+          data-testid="create-org"
+          onClick={() => {
+            const name = window.prompt('New organization name?');
+            if (name && name.trim()) onCreateOrg(name.trim());
+          }}
+          style={styles.createOrgButton}
+        >
           + New org
         </button>
-        {showCreate && (
-          <form
-            style={styles.createOrgForm}
-            onSubmit={async (e) => {
-              e.preventDefault();
-              if (!newOrgName.trim()) return;
-              await onCreateOrg(newOrgName.trim());
-              setNewOrgName('');
-              setShowCreate(false);
-            }}
-          >
-            <input value={newOrgName} onChange={(e) => setNewOrgName(e.target.value)} placeholder="Org name" autoFocus />
-            <button type="submit">Create</button>
-          </form>
-        )}
       </div>
 
       <nav style={styles.nav}>
@@ -213,13 +333,73 @@ function Sidebar({ me, onSwitchOrg, onCreateOrg, onSignOut, activeCard, onSelect
       </nav>
 
       <div style={styles.footer}>
-        <div style={styles.roleTag}>{me.role}</div>
+        <div data-testid="active-role" style={styles.roleTag}>{me.role}</div>
         <button onClick={onSignOut} style={styles.signOutButton}>Sign out</button>
       </div>
     </aside>
   );
 }
 
+function InviteAcceptPage({ token: inviteToken }) {
+  const [invite, setInvite] = useState(null);
+  const [error, setError] = useState(null);
+  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    apiFetch(`/invites/${inviteToken}`)
+      .then(setInvite)
+      .catch((err) => setError(err.message || 'invite not found'));
+  }, [inviteToken]);
+
+  async function handleAccept(e) {
+    e.preventDefault();
+    try {
+      await apiFetch(`/invites/${inviteToken}/accept`, { method: 'POST', body: { name, password } });
+      setDone(true);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  if (done) {
+    // Reuse the same login form the rest of the app uses.
+    return <LoginPage onLogin={() => {}} />;
+  }
+
+  if (error) {
+    return (
+      <main style={styles.loginPage}>
+        <div data-testid="invite-error" role="alert" style={styles.loginError}>{error}</div>
+      </main>
+    );
+  }
+
+  if (!invite) return null;
+
+  return (
+    <main style={styles.loginPage}>
+      <form onSubmit={handleAccept} style={styles.loginForm}>
+        <h1 style={{ margin: 0 }}>Join {invite.orgName}</h1>
+        <p>Role: <span data-testid="invite-role">{invite.role}</span></p>
+        <label>
+          Email
+          <input data-testid="invite-email" value={invite.email} readOnly style={{ display: 'block', width: '100%', marginTop: 4 }} />
+        </label>
+        <label>
+          Name
+          <input data-testid="invite-name" value={name} onChange={(e) => setName(e.target.value)} style={{ display: 'block', width: '100%', marginTop: 4 }} />
+        </label>
+        <label>
+          Password
+          <input data-testid="invite-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={{ display: 'block', width: '100%', marginTop: 4 }} />
+        </label>
+        <button data-testid="invite-submit" type="submit">Join</button>
+      </form>
+    </main>
+  );
+}
 // --- Devices card ------------------------------------------------------------
 
 function DevicesCard({ token, orgId, me }) {
@@ -227,7 +407,7 @@ function DevicesCard({ token, orgId, me }) {
   const [error, setError] = useState(null);
 
   async function refresh() {
-    setError(null); 
+    setError(null);
     try {
       const data = await apiFetch(`/orgs/${orgId}/devices`, { token });
       setDevices(data.devices);
@@ -270,6 +450,7 @@ function DevicesCard({ token, orgId, me }) {
       </header>
 
       {error && <p>{error.message}</p>}
+      {devices && devices.length === 0 && <p data-testid="devices-empty">No devices yet.</p>}
       <table style={styles.table}>
         <tbody>
           {devices?.map((d) => (
@@ -415,8 +596,74 @@ function PeopleCard({ token, orgId, me }) {
 
 // --- Grants card ------------------------------------------------------------
 
+// function GrantsCard({ token, orgId, me }) {
+//   const [grants, setGrants] = useState(null);
+
+//   async function refresh() {
+//     const data = await apiFetch(`/orgs/${orgId}/grants`, { token });
+//     setGrants(data.grants);
+//   }
+//   useEffect(() => { refresh(); }, [orgId, token]);
+
+//   const canCreate = me.permissions['grant:create']?.effect === 'allow';
+//   const canRevoke = me.permissions['grant:revoke']?.effect === 'allow';
+
+//   return (
+//     <div>
+//       <header style={styles.cardHeader}>
+//         <h2>Grants</h2>
+//         {canCreate && (
+//           <button
+//             data-testid="new-grant" data-permission="grant:create" data-state="unlocked"
+//             onClick={async () => {
+//               const userId = window.prompt('User id to grant to?');
+//               const permission = window.prompt('Permission (e.g. device:control)?');
+//               const effect = window.prompt('Effect: allow or deny?', 'allow');
+//               const deviceId = window.prompt('Device id (optional, blank for org-wide)?') || undefined;
+//               if (userId && permission && effect) {
+//                 await apiFetch(`/orgs/${orgId}/grants`, { method: 'POST', token, body: { userId, effect, permissions: [permission], deviceId } });
+//                 await refresh();
+//               }
+//             }}
+//           >
+//             + New grant
+//           </button>
+//         )}
+//       </header>
+
+//       <table style={styles.table}>
+//         <tbody>
+//           {grants?.map((g) => (
+//             // <tr key={g.id} data-testid="grant-row">
+//             <tr key={g.id} data-testid="grant-row" data-effect={g.effect}>
+//               <td>{g.user_id}</td>
+//               <td>{g.device_id ?? 'org-wide'}</td>
+//               <td>{g.effect}</td>
+//               <td>{Array.isArray(g.permissions) ? g.permissions.join(', ') : g.permissions}</td>
+//               <td>
+//                 {canRevoke && (
+//                   <button
+//                     data-testid="revoke-grant" data-permission="grant:revoke" data-state="unlocked"
+//                     onClick={async () => { await apiFetch(`/orgs/${orgId}/grants/${g.id}`, { method: 'DELETE', token }); await refresh(); }}
+//                   >
+//                     Revoke
+//                   </button>
+//                 )}
+//               </td>
+//             </tr>
+//           ))}
+//         </tbody>
+//       </table>
+//     </div>
+//   );
+// }
+
 function GrantsCard({ token, orgId, me }) {
   const [grants, setGrants] = useState(null);
+  const [members, setMembers] = useState([]);
+  const [devices, setDevices] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ userId: '', deviceId: '', effect: 'allow', permissions: new Set() });
 
   async function refresh() {
     const data = await apiFetch(`/orgs/${orgId}/grants`, { token });
@@ -424,36 +671,95 @@ function GrantsCard({ token, orgId, me }) {
   }
   useEffect(() => { refresh(); }, [orgId, token]);
 
+  useEffect(() => {
+    if (!showForm) return;
+    apiFetch(`/orgs/${orgId}/members`, { token }).then((d) => setMembers(d.members));
+    apiFetch(`/orgs/${orgId}/devices`, { token }).then((d) => setDevices(d.devices));
+  }, [showForm, orgId, token]);
+
   const canCreate = me.permissions['grant:create']?.effect === 'allow';
   const canRevoke = me.permissions['grant:revoke']?.effect === 'allow';
+  const allPermissionKeys = Object.keys(me.permissions);
+
+  function togglePermission(key) {
+    setForm((f) => {
+      const next = new Set(f.permissions);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return { ...f, permissions: next };
+    });
+  }
+
+  async function submitGrant(e) {
+    e.preventDefault();
+    await apiFetch(`/orgs/${orgId}/grants`, {
+      method: 'POST', token,
+      body: {
+        userId: form.userId,
+        deviceId: form.deviceId || undefined,
+        effect: form.effect,
+        permissions: Array.from(form.permissions),
+      },
+    });
+    setShowForm(false);
+    setForm({ userId: '', deviceId: '', effect: 'allow', permissions: new Set() });
+    await refresh();
+  }
 
   return (
     <div>
       <header style={styles.cardHeader}>
         <h2>Grants</h2>
         {canCreate && (
-          <button
-            data-testid="new-grant" data-permission="grant:create" data-state="unlocked"
-            onClick={async () => {
-              const userId = window.prompt('User id to grant to?');
-              const permission = window.prompt('Permission (e.g. device:control)?');
-              const effect = window.prompt('Effect: allow or deny?', 'allow');
-              const deviceId = window.prompt('Device id (optional, blank for org-wide)?') || undefined;
-              if (userId && permission && effect) {
-                await apiFetch(`/orgs/${orgId}/grants`, { method: 'POST', token, body: { userId, effect, permissions: [permission], deviceId } });
-                await refresh();
-              }
-            }}
-          >
+          <button data-testid="new-grant" data-permission="grant:create" data-state="unlocked" onClick={() => setShowForm((s) => !s)}>
             + New grant
           </button>
         )}
       </header>
 
+      {showForm && (
+        <form onSubmit={submitGrant} style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16, padding: 12, border: '1px solid #e5e7eb', borderRadius: 8 }}>
+          <label>
+            User
+            <select data-testid="grant-user" value={form.userId} onChange={(e) => setForm((f) => ({ ...f, userId: e.target.value }))} required>
+              <option value="">Select a user</option>
+              {members.map((m) => <option key={m.id} value={m.id}>{m.name} ({m.email})</option>)}
+            </select>
+          </label>
+          <label>
+            Device (optional, blank for org-wide)
+            <select data-testid="grant-device" value={form.deviceId} onChange={(e) => setForm((f) => ({ ...f, deviceId: e.target.value }))}>
+              <option value="">Org-wide</option>
+              {devices.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
+          </label>
+          <label>
+            Effect
+            <select data-testid="grant-effect" value={form.effect} onChange={(e) => setForm((f) => ({ ...f, effect: e.target.value }))}>
+              <option value="allow">Allow</option>
+              <option value="deny">Deny</option>
+            </select>
+          </label>
+          <fieldset style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4 }}>
+            {allPermissionKeys.map((key) => (
+              <label key={key} style={{ fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  data-permission-key={key}
+                  checked={form.permissions.has(key)}
+                  onChange={() => togglePermission(key)}
+                />
+                {key}
+              </label>
+            ))}
+          </fieldset>
+          <button data-testid="grant-submit" type="submit">Create grant</button>
+        </form>
+      )}
+
       <table style={styles.table}>
         <tbody>
           {grants?.map((g) => (
-            <tr key={g.id} data-testid="grant-row">
+            <tr key={g.id} data-testid="grant-row" data-effect={g.effect}>
               <td>{g.user_id}</td>
               <td>{g.device_id ?? 'org-wide'}</td>
               <td>{g.effect}</td>
@@ -614,11 +920,26 @@ function App() {
   const [token, setToken] = useState(null);
   const [me, setMe] = useState(null);
   const [activeCard, setActiveCard] = useState('devices');
+  const [booting, setBooting] = useState(true);
+  const [path] = useState(window.location.pathname);
 
   async function refreshMe(tok) {
     const data = await apiFetch('/auth/me', { token: tok });
     setMe(data);
   }
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await apiFetch('/auth/refresh', { method: 'POST' });
+        setToken(data.token);
+        await refreshMe(data.token);
+      } catch {
+        // no valid refresh cookie -- fall through to the login page
+      } finally {
+        setBooting(false);
+      }
+    })();
+  }, []);
 
   async function handleLogin(loginData) {
     setToken(loginData.token);
@@ -631,15 +952,30 @@ function App() {
     await refreshMe(data.token);
   }
 
+  // async function handleCreateOrg(name) {
+  //   await apiFetch('/orgs', { method: 'POST', token, body: { name } });
+  //   await refreshMe(token);
+  // }
   async function handleCreateOrg(name) {
-    await apiFetch('/orgs', { method: 'POST', token, body: { name } });
-    await refreshMe(token);
-  }
+  const created = await apiFetch('/orgs', { method: 'POST', token, body: { name } });
+  const switched = await apiFetch('/auth/token', { method: 'POST', token, body: { orgId: created.id } });
+  setToken(switched.token);
+  await refreshMe(switched.token);
+}
 
   function handleSignOut() {
     setToken(null);
     setMe(null);
   }
+
+    if (path.startsWith('/invite/')) {
+    return <InviteAcceptPage token={path.split('/invite/')[1]} />;
+  }
+
+  if (booting) {
+    return null; // avoid flashing the login page during the refresh check
+  }
+
 
   if (!token || !me) {
     return <LoginPage onLogin={handleLogin} />;
@@ -652,7 +988,12 @@ function App() {
       data-testid="app-shell"
       data-org-id={me.orgId}
       data-org-theme={activeOrg?.theme}
-      style={{ ...styles.shell, '--accent': accentFor(activeOrg?.theme) }}
+      // style={{ ...styles.shell, '--accent': accentFor(activeOrg?.theme) }}
+      style={{
+        ...styles.shell,
+        '--accent': accentFor(activeOrg?.theme),
+        backgroundColor: `color-mix(in srgb, ${accentFor(activeOrg?.theme)} 6%, white)`,
+      }}
     >
       <Sidebar
         me={me}
